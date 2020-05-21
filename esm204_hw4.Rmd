@@ -117,3 +117,43 @@ ggplot() +
 ```
 
 b. Consumption over time
+
+```{r}
+
+ggplot() +
+  geom_line(data = T_0_df,
+            aes(x = year, y = consumption),
+            size = 1, 
+            color = "blue")+
+  geom_line(data = T_2_df,
+            aes(x = year, y = consumption),
+            size = 1, 
+            color = "orange")+
+  geom_line(data = T_8_df,
+            aes(x = year, y = consumption),
+            size = 1, 
+            color = "red")
+
+```
+
+c. Undiscounted utility over time
+
+```{r}
+
+ggplot() +
+  geom_line(data = T_0_df,
+            aes(x = year, y = utility),
+            size = 1, 
+            color = "blue")+
+  geom_line(data = T_2_df,
+            aes(x = year, y = utility),
+            size = 1, 
+            color = "orange")+
+  geom_line(data = T_8_df,
+            aes(x = year, y = utility),
+            size = 1, 
+            color = "red")
+
+
+```
+
