@@ -2,7 +2,7 @@
 title: "esm204_hw4"
 author: "David Segan"
 date: "5/21/2020"
-output: pdf_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -55,7 +55,7 @@ Set up parameters
 ```{r}
 l = 0.005
 n = 0.5
-g = 0.1
+g = 0.01
 beta = 0.05
 
 # discount rate
@@ -80,7 +80,8 @@ T_0_df <- data.frame(year = t,
                  temp = temp(t, T_0)) %>% 
   mutate(fraction_economy_retained = econ(beta,temp)) %>% 
   mutate(consumption = C(fraction_economy_retained, g, year)) %>% 
-  mutate(utility = U(consumption, n))
+  mutate(utility = U(consumption, n)) %>% 
+  mutate(pv_utility = utility/((1+r)^t))
 
 T_2_df <- data.frame(year = t,
                  temp_increase = T_2,
@@ -154,6 +155,42 @@ ggplot() +
             size = 1, 
             color = "red")
 
+
+```
+
+2. Analysis
+
+a. Climate change leads to 4.4 degree increase in temperature
+
+```{r}
+T_4.4 = 4.4
+
+# Present value / discounted utility 
+# Since we want to find the total present value. We have to sum up the present values of each year's utility. To do this let's create another data frame
+
+T_4.4_df <- data.frame(year = t,
+                 temp_increase = T_4.4,
+                 temp = temp(t, T_4.4)) %>% 
+  mutate(fraction_economy_retained = econ(beta,temp)) %>% 
+  mutate(consumption = C(fraction_economy_retained, g, year)) %>% 
+  mutate(utility = U(consumption, n)) %>% 
+  # add column for discounted utility
+  mutate(pv_utility = utility/((1+r)^t)) 
+
+# Let's graph this to check
+
+ggplot()+ 
+  geom_line(data = T_4.4_df, 
+       aes(x = year, y = pv_utility))
+
+# Yeah, seems a lot less than undiscounted utility
+
+# Now, how do we sum up all those values....
+pv_U_with_cc <- sum(T_4.4_df$pv_utility)
+pv_U_without_cc <- sum(T_0_df$pv_utility)
+
+pv_U_with_cc
+pv_U_without_cc
 
 ```
 
