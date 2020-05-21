@@ -1,0 +1,119 @@
+---
+title: "esm204_hw4"
+author: "David Segan"
+date: "5/21/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Install libraries as necessary
+library(tidyverse)
+library(janitor)
+```
+
+Create all of our functions
+```{r}
+
+# Create a function for temperature increase relative to year 0
+# t = year
+# T = temp increase after year 100
+temp <- function(t, T) 
+{
+  out = pmin(t*T/100, T)
+  # not sure why pmin works but min does not when I try to create the df
+  return(out)
+}
+
+# Function for fraction of economic activity retained in a year
+econ <- function(beta, temp)
+{
+  out = exp(-beta*(temp^2))
+  return(out)
+}
+
+# Function for consumption
+C <- function(econ, g, t)
+{
+  out = econ*exp(g*t)
+  return(out)
+}
+
+# Function for society's utility from consumption
+U <- function(C, n)
+{
+  out = (C^1-n)/1-n
+  return(out)
+}
+
+```
+
+Set up parameters
+```{r}
+l = 0.005
+n = 0.5
+g = 0.1
+beta = 0.05
+
+# discount rate
+r = l + n*g
+```
+
+
+1. Plots
+
+```{r}
+# First we need to make data frames that include t from 0 to 200 and also the BAU_T values for each of our difference scenarios
+
+# Assign values
+t <- 0:200
+T_0 <- 0
+T_2 <- 2
+T_8 <- 8
+
+# Create data frames
+T_0_df <- data.frame(year = t,
+                 temp_increase = T_0,
+                 temp = temp(t, T_0)) %>% 
+  mutate(fraction_economy_retained = econ(beta,temp)) %>% 
+  mutate(consumption = C(fraction_economy_retained, g, year)) %>% 
+  mutate(utility = U(consumption, n))
+
+T_2_df <- data.frame(year = t,
+                 temp_increase = T_2,
+                 temp = temp(t, T_2)) %>% 
+  mutate(fraction_economy_retained = econ(beta,temp)) %>% 
+  mutate(consumption = C(fraction_economy_retained, g, year)) %>% 
+  mutate(utility = U(consumption, n))
+
+T_8_df <- data.frame(year = t,
+                 temp_increase = T_8,
+                 temp = temp(t, T_8)) %>% 
+  mutate(fraction_economy_retained = econ(beta,temp)) %>% 
+  mutate(consumption = C(fraction_economy_retained, g, year)) %>% 
+  mutate(utility = U(consumption, n))
+
+```
+
+a. Temperature over time
+
+```{r}
+ggplot() +
+  geom_line(data = T_0_df,
+            aes(x = year, y = temp),
+            size = 1, 
+            color = "blue")+
+  geom_line(data = T_2_df,
+            aes(x = year, y = temp),
+            size = 1, 
+            color = "orange")+
+  geom_line(data = T_8_df,
+            aes(x = year, y = temp),
+            size = 1, 
+            color = "red")
+```
+
+b. Consumption over time
