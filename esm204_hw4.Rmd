@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # Install libraries as necessary
 library(tidyverse)
 library(janitor)
+library(scales)
 ```
 
 Create all of our functions
@@ -73,6 +74,7 @@ t <- 0:200
 T_0 <- 0
 T_2 <- 2
 T_8 <- 8
+T_4.4 <- 4.4
 
 # Create data frames
 T_0_df <- data.frame(year = t,
@@ -163,7 +165,6 @@ ggplot() +
 a. Climate change leads to 4.4 degree increase in temperature
 
 ```{r}
-T_4.4 = 4.4
 
 # Present value / discounted utility 
 # Since we want to find the total present value. We have to sum up the present values of each year's utility. To do this let's create another data frame
@@ -175,13 +176,21 @@ T_4.4_df <- data.frame(year = t,
   mutate(consumption = C(fraction_economy_retained, g, year)) %>% 
   mutate(utility = U(consumption, n)) %>% 
   # add column for discounted utility
-  mutate(pv_utility = utility/((1+r)^t)) 
+  mutate(pv_utility = utility/((1+r)^t))
 
 # Let's graph this to check
 
-ggplot()+ 
-  geom_line(data = T_4.4_df, 
-       aes(x = year, y = pv_utility))
+# ggplot()+ 
+#   geom_line(data = T_4.4_df, 
+#        aes(x = year, y = pv_utility))
+# 
+# ggplot()+ 
+#   geom_line(data = T_0_df, 
+#        aes(x = year, y = utility))
+# 
+# ggplot()+ 
+#   geom_line(data = T_0_df, 
+#        aes(x = year, y = pv_utility))
 
 # Yeah, seems a lot less than undiscounted utility
 
@@ -189,8 +198,24 @@ ggplot()+
 pv_U_with_cc <- sum(T_4.4_df$pv_utility)
 pv_U_without_cc <- sum(T_0_df$pv_utility)
 
-pv_U_with_cc
-pv_U_without_cc
+# Percent difference
+pct_loss_L <- (pv_U_without_cc-pv_U_with_cc)/pv_U_without_cc
 
+```
+
+Present value utility with climate change:
+```{r}
+pv_U_with_cc
+```
+
+Present value utility without climate change:
+```{r}
+pv_U_without_cc
+```
+
+Percentage loss in present value utility from climate change:
+
+```{r}
+percent(pct_loss_L)
 ```
 
