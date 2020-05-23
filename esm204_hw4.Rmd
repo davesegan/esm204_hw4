@@ -1,19 +1,21 @@
 ---
-title: "esm204_hw4"
+title: "ESM 204: Homework 4 (A Climate Change Model)"
 author: "David Segan"
 date: "5/21/2020"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
 
 ```{r}
 # Install libraries as necessary
 library(tidyverse)
 library(janitor)
-library(scales)
+library(scales) # for formatting as a percent
+library(purrr)
+library(pracma) # fzero function is like solver
 ```
 
 Create all of our functions
@@ -25,14 +27,14 @@ Create all of our functions
 temp <- function(t, T) 
 {
   out = pmin(t*T/100, T)
-  # not sure why pmin works but min does not when I try to create the df
+  # pmin works but min does not when looking at a full df. this is because pmin looks at a vector while min looks at all values so would also report back 0
   return(out)
 }
 
 # Function for fraction of economic activity retained in a year
 econ <- function(beta, temp)
 {
-  out = exp(-beta*(temp^2))
+  out = exp(-1*beta*(temp^2))
   return(out)
 }
 
@@ -46,7 +48,7 @@ C <- function(econ, g, t)
 # Function for society's utility from consumption
 U <- function(C, n)
 {
-  out = (C^1-n)/1-n
+  out = (C^(1-n))/(1-n)
   return(out)
 }
 
@@ -64,7 +66,7 @@ r = l + n*g
 ```
 
 
-1. Plots
+### 1. Plots
 
 ```{r}
 # First we need to make data frames that include t from 0 to 200 and also the BAU_T values for each of our difference scenarios
@@ -101,7 +103,7 @@ T_8_df <- data.frame(year = t,
 
 ```
 
-a. Temperature over time
+##### a. Temperature over time
 
 ```{r}
 ggplot() +
@@ -119,7 +121,8 @@ ggplot() +
             color = "red")
 ```
 
-b. Consumption over time
+
+##### b. Consumption over time
 
 ```{r}
 
@@ -139,7 +142,7 @@ ggplot() +
 
 ```
 
-c. Undiscounted utility over time
+##### c. Undiscounted utility over time
 
 ```{r}
 
@@ -160,9 +163,9 @@ ggplot() +
 
 ```
 
-2. Analysis
+### 2. Analysis
 
-a. Climate change leads to 4.4 degree increase in temperature
+##### a. Climate change leads to 4.4 degree increase in temperature
 
 ```{r}
 
@@ -199,7 +202,7 @@ pv_U_with_cc <- sum(T_4.4_df$pv_utility)
 pv_U_without_cc <- sum(T_0_df$pv_utility)
 
 # Percent difference
-pct_loss_L <- (pv_U_without_cc-pv_U_with_cc)/pv_U_without_cc
+pct_loss_L <- (pv_U_with_cc-pv_U_without_cc)/pv_U_without_cc
 
 ```
 
@@ -217,5 +220,166 @@ Percentage loss in present value utility from climate change:
 
 ```{r}
 percent(pct_loss_L)
+```
+
+##### b. Sensitivity analysis: 10% increase in parameters
+
+Increase T by 10%:
+```{r}
+# Increase parameters by 10%
+T_new <- 1.1*T_4.4
+g_new <- 1.1*g
+n_new <- 1.1*n
+beta_new <- 1.1*beta
+
+T_new_df <- data.frame(year = t,
+                 temp_increase = T_new,
+                 temp = temp(t, T_new)) %>% 
+  mutate(fraction_economy_retained = econ(beta,temp)) %>% 
+  mutate(consumption = C(fraction_economy_retained, g, year)) %>% 
+  mutate(utility = U(consumption, n)) %>% 
+  mutate(pv_utility = utility/((1+r)^t))
+
+# Sum PV
+pv_U_T_new <- sum(T_new_df$pv_utility)
+
+# New percent difference (L)
+pct_loss_L_T_new <- (pv_U_T_new-pv_U_without_cc)/pv_U_without_cc
+
+# Percent change in L
+
+pct_change_L_T_new <- (pct_loss_L_T_new -pct_loss_L)/pct_loss_L
+
+# New L
+percent(pct_loss_L_T_new)
+
+# % change in L
+percent(pct_change_L_T_new)
+
+```
+
+
+Increase g by 10%:
+
+```{r}
+# new discount rate
+r_g_new = l + n*g_new
+
+g_new_df <- data.frame(year = t,
+                 temp_increase = T_4.4,
+                 temp = temp(t, T_4.4)) %>% 
+  mutate(fraction_economy_retained = econ(beta,temp)) %>% 
+  mutate(consumption = C(fraction_economy_retained, g_new, year)) %>% 
+  mutate(utility = U(consumption, n)) %>% 
+  mutate(pv_utility = utility/((1+r)^t))
+
+# Sum PV
+pv_U_g_new <- sum(g_new_df$pv_utility)
+
+# New percent difference (L)
+pct_loss_L_g_new <- (pv_U_g_new-pv_U_without_cc)/pv_U_without_cc
+
+# Percent change in L
+
+pct_change_L_g_new <- (pct_loss_L_g_new -pct_loss_L)/pct_loss_L
+
+# New L
+percent(pct_loss_L_g_new)
+# % change in L
+percent(pct_change_L_g_new)
+
+```
+
+Increase n by 10%:
+
+```{r}
+# new discount rate
+r_n_new = l + n_new*g
+
+n_new_df <- data.frame(year = t,
+                 temp_increase = T_4.4,
+                 temp = temp(t, T_4.4)) %>% 
+  mutate(fraction_economy_retained = econ(beta,temp)) %>% 
+  mutate(consumption = C(fraction_economy_retained, g, year)) %>% 
+  mutate(utility = U(consumption, n_new)) %>% 
+  mutate(pv_utility = utility/((1+r_n_new)^t))
+
+# Sum PV
+pv_U_n_new <- sum(n_new_df$pv_utility)
+
+# New percent difference (L)
+pct_loss_L_n_new <- (pv_U_n_new-pv_U_without_cc)/pv_U_without_cc
+
+# Percent change in L
+pct_change_L_n_new <- (pct_loss_L_n_new -pct_loss_L)/pct_loss_L
+
+# New L
+percent(pct_loss_L_n_new)
+
+# % change in L
+percent(pct_change_L_n_new)
+```
+
+Increase beta by 10%:
+
+```{r}
+beta_new_df <- data.frame(year = t,
+                 temp_increase = T_4.4,
+                 temp = temp(t, T_4.4)) %>% 
+  mutate(fraction_economy_retained = econ(beta_new,temp)) %>% 
+  mutate(consumption = C(fraction_economy_retained, g, year)) %>% 
+  mutate(utility = U(consumption, n)) %>% 
+  mutate(pv_utility = utility/((1+r)^t))
+
+# Sum PV
+pv_U_beta_new <- sum(beta_new_df$pv_utility)
+
+# New percent difference (L)
+pct_loss_L_beta_new <- (pv_U_beta_new-pv_U_without_cc)/pv_U_without_cc
+
+# Percent change in L
+pct_change_L_beta_new <- (pct_loss_L_beta_new -pct_loss_L)/pct_loss_L
+
+# New L
+percent(pct_loss_L_beta_new)
+# % change in L
+percent(pct_change_L_beta_new)
+```
+
+##### c. Maximum fraction (theta star) of consumption that society would be willing to give up each year to prevent climate change
+
+```{r}
+# we need a new consumption amount that leads to a present value utility without climate change equals the present value of utility with 4.4 degrees of climate change
+
+
+
+
+
+
+# theta_func <- function(theta)
+# {
+#   # 
+#   out = ((theta)^(1-n)*pv_U_without_cc) - pv_U_with_cc
+#   return(out)
+# }
+# 
+# theta_star <- fzero(fun = theta_func, x = 0)$x
+# 
+# percent(theta_star)
+```
+
+
+##### d. What is theta* (see above) if T is uncertain? 
+
+# Uncertainty parameters for T and their associat
+
+
+```{r}
+T_u_low <- 2
+T_u_low_p <- 0.2
+T_u_med <- 4
+T_u_med_p <- 0.5
+T_u_high <- 6
+T_u_high_p <- 0.3
 ```
 
