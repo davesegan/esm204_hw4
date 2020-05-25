@@ -15,7 +15,7 @@ library(tidyverse)
 library(janitor)
 library(scales) # for formatting as a percent
 library(purrr)
-library(pracma) # fzero function is like solver
+library(pracma) # fzero function is like excel solver
 ```
 
 Create all of our functions
@@ -54,7 +54,7 @@ U <- function(C, n)
 
 ```
 
-Set up parameters
+Set up base case parameters
 ```{r}
 l = 0.005
 n = 0.5
@@ -108,17 +108,27 @@ T_8_df <- data.frame(year = t,
 ```{r}
 ggplot() +
   geom_line(data = T_0_df,
-            aes(x = year, y = temp),
-            size = 1, 
-            color = "blue")+
+            aes(x = year,
+                y = temp,
+                color = "No climate change"),
+            size = 1) +
   geom_line(data = T_2_df,
-            aes(x = year, y = temp),
-            size = 1, 
-            color = "orange")+
+            aes(x = year,
+                y = temp,
+                color = "Modest climate change"),
+            size = 1)+
   geom_line(data = T_8_df,
-            aes(x = year, y = temp),
-            size = 1, 
-            color = "red")
+            aes(x = year,
+                y = temp,
+                color = "Extreme climate change"),
+            size = 1) +
+  scale_color_manual(values = c("red", "orange", "blue")) +
+  theme_minimal() +
+  theme(legend.position = c(0.8,.7)) +
+  labs(title =,
+       x = "Years from year 0",
+       y = "Temperature Increase",
+       color = "Scenario") 
 ```
 
 
@@ -128,17 +138,26 @@ ggplot() +
 
 ggplot() +
   geom_line(data = T_0_df,
-            aes(x = year, y = consumption),
-            size = 1, 
-            color = "blue")+
+            aes(x = year,
+                y = consumption,
+                color = "No climate change"),
+            size = 1)+
   geom_line(data = T_2_df,
-            aes(x = year, y = consumption),
-            size = 1, 
-            color = "orange")+
+            aes(x = year,
+                y = consumption,
+                color = "Modest climate change"),
+            size = 1)+
   geom_line(data = T_8_df,
-            aes(x = year, y = consumption),
-            size = 1, 
-            color = "red")
+            aes(x = year,
+                y = consumption,
+                color = "Extreme climate change"),
+            size = 1) +
+  scale_color_manual(values = c("red", "orange", "blue")) +
+  theme_minimal() +
+  theme(legend.position = c(.3,.8)) +
+  labs(x = "Year from year 0",
+       y = "Consumption",
+       color = "Scenario")
 
 ```
 
@@ -148,17 +167,26 @@ ggplot() +
 
 ggplot() +
   geom_line(data = T_0_df,
-            aes(x = year, y = utility),
-            size = 1, 
-            color = "blue")+
+            aes(x = year,
+                y = utility,
+                color = "No climate change"),
+            size = 1)+
   geom_line(data = T_2_df,
-            aes(x = year, y = utility),
-            size = 1, 
-            color = "orange")+
+            aes(x = year,
+                y = utility,
+                color = "Modest climate change"),
+            size = 1)+
   geom_line(data = T_8_df,
-            aes(x = year, y = utility),
-            size = 1, 
-            color = "red")
+            aes(x = year,
+                y = utility,
+                color = "Extreme climate change"),
+            size = 1) +
+  scale_color_manual(values = c("red", "orange", "blue")) +
+  theme_minimal() +
+  theme(legend.position = c(.3,.8)) +
+  labs(x = "Year from year 0",
+       y = "Utility",
+       color = "Scenario")
 
 
 ```
