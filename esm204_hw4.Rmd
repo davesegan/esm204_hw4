@@ -1,12 +1,12 @@
 ---
 title: "ESM 204: Homework 4 (A Climate Change Model)"
-author: "David Segan"
+author: "David Segan, Grace Brofman, & Jordan Isken"
 date: "5/21/2020"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
 
 ```{r}
@@ -18,8 +18,11 @@ library(purrr)
 library(pracma) # fzero function is like excel solver
 ```
 
-Create all of our functions
+
 ```{r}
+# -------------------
+# Create all of our functions
+# -------------------
 
 # Create a function for temperature increase relative to year 0
 # t = year
@@ -54,8 +57,12 @@ U <- function(C, n)
 
 ```
 
-Set up base case parameters
+
 ```{r}
+# -----------------
+# Set up base case parameters
+# -----------------
+
 l = 0.005
 n = 0.5
 g = 0.01
@@ -82,24 +89,24 @@ T_4.4 <- 4.4
 T_0_df <- data.frame(year = t,
                  temp_increase = T_0,
                  temp = temp(t, T_0)) %>% 
-  mutate(fraction_economy_retained = econ(beta,temp)) %>% 
-  mutate(consumption = C(fraction_economy_retained, g, year)) %>% 
-  mutate(utility = U(consumption, n)) %>% 
-  mutate(pv_utility = utility/((1+r)^t))
+  mutate(fraction_economy_retained0 = econ(beta,temp)) %>% 
+  mutate(consumption0 = C(fraction_economy_retained0, g, year)) %>% 
+  mutate(utility0 = U(consumption0, n)) %>% 
+  mutate(pv_utility0 = utility0/((1+r)^t))
 
 T_2_df <- data.frame(year = t,
                  temp_increase = T_2,
                  temp = temp(t, T_2)) %>% 
-  mutate(fraction_economy_retained = econ(beta,temp)) %>% 
-  mutate(consumption = C(fraction_economy_retained, g, year)) %>% 
-  mutate(utility = U(consumption, n))
+  mutate(fraction_economy_retained2 = econ(beta,temp)) %>% 
+  mutate(consumption2 = C(fraction_economy_retained2, g, year)) %>% 
+  mutate(utility2 = U(consumption2, n))
 
 T_8_df <- data.frame(year = t,
                  temp_increase = T_8,
                  temp = temp(t, T_8)) %>% 
-  mutate(fraction_economy_retained = econ(beta,temp)) %>% 
-  mutate(consumption = C(fraction_economy_retained, g, year)) %>% 
-  mutate(utility = U(consumption, n))
+  mutate(fraction_economy_retained8 = econ(beta,temp)) %>% 
+  mutate(consumption8 = C(fraction_economy_retained8, g, year)) %>% 
+  mutate(utility8 = U(consumption8, n))
 
 ```
 
@@ -124,7 +131,7 @@ ggplot() +
             size = 1) +
   scale_color_manual(values = c("red", "orange", "blue")) +
   theme_minimal() +
-  theme(legend.position = c(0.8,.7)) +
+  theme(legend.position = c(0.2,.85)) +
   labs(title =,
        x = "Years from year 0",
        y = "Temperature Increase",
@@ -139,22 +146,22 @@ ggplot() +
 ggplot() +
   geom_line(data = T_0_df,
             aes(x = year,
-                y = consumption,
+                y = consumption0,
                 color = "No climate change"),
             size = 1)+
   geom_line(data = T_2_df,
             aes(x = year,
-                y = consumption,
+                y = consumption2,
                 color = "Modest climate change"),
             size = 1)+
   geom_line(data = T_8_df,
             aes(x = year,
-                y = consumption,
+                y = consumption8,
                 color = "Extreme climate change"),
             size = 1) +
   scale_color_manual(values = c("red", "orange", "blue")) +
   theme_minimal() +
-  theme(legend.position = c(.3,.8)) +
+  theme(legend.position = c(0.2,.85)) +
   labs(x = "Year from year 0",
        y = "Consumption",
        color = "Scenario")
@@ -168,22 +175,22 @@ ggplot() +
 ggplot() +
   geom_line(data = T_0_df,
             aes(x = year,
-                y = utility,
+                y = utility0,
                 color = "No climate change"),
             size = 1)+
   geom_line(data = T_2_df,
             aes(x = year,
-                y = utility,
+                y = utility2,
                 color = "Modest climate change"),
             size = 1)+
   geom_line(data = T_8_df,
             aes(x = year,
-                y = utility,
+                y = utility8,
                 color = "Extreme climate change"),
             size = 1) +
   scale_color_manual(values = c("red", "orange", "blue")) +
   theme_minimal() +
-  theme(legend.position = c(.3,.8)) +
+  theme(legend.position = c(0.2,.85)) +
   labs(x = "Year from year 0",
        y = "Utility",
        color = "Scenario")
@@ -203,11 +210,11 @@ ggplot() +
 T_4.4_df <- data.frame(year = t,
                  temp_increase = T_4.4,
                  temp = temp(t, T_4.4)) %>% 
-  mutate(fraction_economy_retained = econ(beta,temp)) %>% 
-  mutate(consumption = C(fraction_economy_retained, g, year)) %>% 
-  mutate(utility = U(consumption, n)) %>% 
+  mutate(fraction_economy_retained4.4 = econ(beta,temp)) %>% 
+  mutate(consumption4.4 = C(fraction_economy_retained4.4, g, year)) %>% 
+  mutate(utility4.4 = U(consumption4.4, n)) %>% 
   # add column for discounted utility
-  mutate(pv_utility = utility/((1+r)^t))
+  mutate(pv_utility4.4 = utility4.4/((1+r)^t))
 
 # Let's graph this to check
 
@@ -226,33 +233,23 @@ T_4.4_df <- data.frame(year = t,
 # Yeah, seems a lot less than undiscounted utility
 
 # Now, how do we sum up all those values....
-pv_U_with_cc <- sum(T_4.4_df$pv_utility)
-pv_U_without_cc <- sum(T_0_df$pv_utility)
+pv_U_with_cc <- sum(T_4.4_df$pv_utility4.4)
+pv_U_without_cc <- sum(T_0_df$pv_utility0)
 
 # Percent difference
 pct_loss_L <- (pv_U_with_cc-pv_U_without_cc)/pv_U_without_cc
 
 ```
 
-Present value utility with climate change:
-```{r}
-pv_U_with_cc
-```
+- Present value utility with climate change: **`r round(pv_U_with_cc, 2)`**
 
-Present value utility without climate change:
-```{r}
-pv_U_without_cc
-```
+- Present value utility without climate change: **`r round(pv_U_without_cc, 2)`**
 
-Percentage loss in present value utility from climate change:
+- Percentage change in present value utility from climate change (L): **`r percent(pct_loss_L)`**
 
-```{r}
-percent(pct_loss_L)
-```
 
-##### b. Sensitivity analysis: 10% increase in parameters
+##### b. Sensitivity analysis
 
-Increase T by 10%:
 ```{r}
 # Increase parameters by 10%
 T_new <- 1.1*T_4.4
@@ -278,18 +275,17 @@ pct_loss_L_T_new <- (pv_U_T_new-pv_U_without_cc)/pv_U_without_cc
 
 pct_change_L_T_new <- (pct_loss_L_T_new -pct_loss_L)/pct_loss_L
 
-# New L
-percent(pct_loss_L_T_new)
-
-# % change in L
-percent(pct_change_L_T_new)
-
 ```
 
+###### *Increase T by 10% to `r T_new`:*
+- New L: **`r percent(pct_loss_L_T_new)`**
+- % change in L from no climate change scenario: **`r percent(pct_change_L_T_new)`**
 
-Increase g by 10%:
+
 
 ```{r}
+# Increase g by 10%:
+
 # new discount rate
 r_g_new = l + n*g_new
 
@@ -297,7 +293,7 @@ g_new_df <- data.frame(year = t,
                  temp_increase = T_4.4,
                  temp = temp(t, T_4.4)) %>% 
   mutate(fraction_economy_retained = econ(beta,temp)) %>% 
-  mutate(consumption = C(fraction_economy_retained, g_new, year)) %>% 
+  mutate(consumption = C(fraction_economy_retained, g_new, year)) %>%
   mutate(utility = U(consumption, n)) %>% 
   mutate(pv_utility = utility/((1+r)^t))
 
@@ -311,16 +307,17 @@ pct_loss_L_g_new <- (pv_U_g_new-pv_U_without_cc)/pv_U_without_cc
 
 pct_change_L_g_new <- (pct_loss_L_g_new -pct_loss_L)/pct_loss_L
 
-# New L
-percent(pct_loss_L_g_new)
-# % change in L
-percent(pct_change_L_g_new)
-
 ```
 
-Increase n by 10%:
+###### *Increase g (the consumption growth rate) by 10% to `r g_new`:*
+- New L: **`r percent(pct_loss_L_g_new)`**
+- % change in L from no climate change scenario: **`r percent(pct_change_L_g_new)`**
+
+
 
 ```{r}
+# Increase n by 10%
+
 # new discount rate
 r_n_new = l + n_new*g
 
@@ -341,16 +338,16 @@ pct_loss_L_n_new <- (pv_U_n_new-pv_U_without_cc)/pv_U_without_cc
 # Percent change in L
 pct_change_L_n_new <- (pct_loss_L_n_new -pct_loss_L)/pct_loss_L
 
-# New L
-percent(pct_loss_L_n_new)
-
-# % change in L
-percent(pct_change_L_n_new)
 ```
 
-Increase beta by 10%:
+###### *Increase n (the elasticity of marginal utility of consumption with respect to income) by 10% to `r n_new`:*
+- New L: **`r percent(pct_loss_L_n_new)`**
+- % change in L from no climate change scenario: **`r percent(pct_change_L_n_new)`**
+
 
 ```{r}
+# Increase beta by 10%
+
 beta_new_df <- data.frame(year = t,
                  temp_increase = T_4.4,
                  temp = temp(t, T_4.4)) %>% 
@@ -368,26 +365,27 @@ pct_loss_L_beta_new <- (pv_U_beta_new-pv_U_without_cc)/pv_U_without_cc
 # Percent change in L
 pct_change_L_beta_new <- (pct_loss_L_beta_new -pct_loss_L)/pct_loss_L
 
-# New L
-percent(pct_loss_L_beta_new)
-# % change in L
-percent(pct_change_L_beta_new)
 ```
+
+###### *Increase beta by 10% to `r beta_new`:*
+- New L: **`r percent(pct_loss_L_beta_new)`**
+- % change in L from no climate change scenario: **`r percent(pct_change_L_beta_new)`**
 
 ##### c. Maximum fraction (theta star) of consumption that society would be willing to give up each year to prevent climate change
 
 ```{r}
 # we need a new consumption amount that leads to a present value utility without climate change equals the present value of utility with 4.4 degrees of climate change
 
+# let's join the data frame for no climate change and the one with 4.4 climate change
 
-
-
+theta_df <- full_join(T_4.4_df, T_0_df, by = "year") %>% 
+  mutate(C_difference = consumption0 - consumption4.4)
 
 
 # theta_func <- function(theta)
 # {
 #   # 
-#   out = ((theta)^(1-n)*pv_U_without_cc) - pv_U_with_cc
+#   out = (((theta)^(1-n))*pv_U_without_cc) - pv_U_with_cc
 #   return(out)
 # }
 # 
@@ -399,10 +397,9 @@ percent(pct_change_L_beta_new)
 
 ##### d. What is theta* (see above) if T is uncertain? 
 
-# Uncertainty parameters for T and their associat
-
-
 ```{r}
+# Uncertainty parameters for T and their associated probabilities
+
 T_u_low <- 2
 T_u_low_p <- 0.2
 T_u_med <- 4
