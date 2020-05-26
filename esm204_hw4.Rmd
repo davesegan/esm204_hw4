@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 library(tidyverse)
 library(janitor)
 library(scales) # for formatting as a percent
-library(purrr)
+library(purrr) # map functions are like for loops
 library(pracma) # fzero function is like excel solver
 ```
 
@@ -371,20 +371,19 @@ pct_change_L_beta_new <- (pct_loss_L_beta_new -pct_loss_L)/pct_loss_L
 - New L: **`r percent(pct_loss_L_beta_new)`**
 - % change in L from no climate change scenario: **`r percent(pct_change_L_beta_new)`**
 
-##### c. Maximum fraction (theta star) of consumption that society would be willing to give up each year to prevent climate change
+##### c. Maximum fraction (theta star) of consumption that society would be willing to give up each year to prevent climate change assuming T = 4.4
 
 ```{r}
 # we need a new consumption amount that leads to a present value utility without climate change equals the present value of utility with 4.4 degrees of climate change
 
 # let's join the data frame for no climate change and the one with 4.4 climate change
 
-theta_df <- full_join(T_4.4_df, T_0_df, by = "year") %>% 
-  mutate(C_difference = consumption0 - consumption4.4)
-
+# theta_df <- full_join(T_4.4_df, T_0_df, by = "year") %>%
+#   mutate(C_difference = consumption0 - consumption4.4)
 
 # theta_func <- function(theta)
 # {
-#   # 
+#   #
 #   out = (((theta)^(1-n))*pv_U_without_cc) - pv_U_with_cc
 #   return(out)
 # }
@@ -392,10 +391,22 @@ theta_df <- full_join(T_4.4_df, T_0_df, by = "year") %>%
 # theta_star <- fzero(fun = theta_func, x = 0)$x
 # 
 # percent(theta_star)
+
+#----------------------------------
+#theta function: in this function we apply 1-theta first to a vector of the consumption values we calculated in part one for the no climate change scenario, then we apply that to our utility function, then to the PV function, and take a sum. This summed total is then subtracted from the PV value we calculated in part 2a.
+# ----------------------------------
+
+theta_function <- function(theta)pv_U_with_cc-sum((((1-theta)*T_0_df$consumption0)^(1-n)/(1-n))/(1+r)^t)
+
+#use uniroot to find theta where difference in PV = 0 between climate change scenarios
+#"tol =" refers to the number of decimal places
+theta_2c_output <- uniroot(theta_function, interval = c(0,1), tol = .0001)
+
 ```
 
+Theta star: **`r round(theta_2c_output$root,4)`**
 
-##### d. What is theta* (see above) if T is uncertain? 
+##### d. What is theta star if T is uncertain? 
 
 ```{r}
 # Uncertainty parameters for T and their associated probabilities
@@ -406,5 +417,61 @@ T_u_med <- 4
 T_u_med_p <- 0.5
 T_u_high <- 6
 T_u_high_p <- 0.3
+
+# probability distribution
+uncertain_T <- 2*.2 + 4*.5 + 6*.3
+
+output_2d <- function(t,T)
+{
+time_span <- 100
+l = 0.005
+n = 0.5
+g = 0.01
+beta = 0.05
+# discount rate
+r = l + n*g
+
+temp = pmin(t*T/time_span, T)
+econ = exp(-1*beta*(temp^2))
+C = econ*exp(g*t)
+U = (C^(1-n))/(1-n)
+PV = (U/(1+r)^t)
+
+return(data.frame(time=t,
+                  T_change=T,
+                    temperature = temp,
+                    econ = econ,
+                    consumption = C,
+                  utility = U,
+                  present_value = PV))
+}
+
+uncertain_T_df <- purrr::map2_dfr(rep(seq(from=0,to=200,by=1), 3), c(rep(2, 201), rep(4, 201), rep(6, 201)), output_2d)
+
+# new data frames for summed PVs using theta function from 2c
+uncertain_2_df <- uncertain_T_df %>%
+  filter(T_change == 2) %>%
+  select(consumption)
+uncertain_4_df <- uncertain_T_df %>%
+  filter(T_change == 4) %>%
+  select(consumption)
+uncertain_6_df <- uncertain_T_df %>%
+  filter(T_change == 6) %>%
+  select(consumption)
+
+# find summed PVs of the three different scenarios, multiplied by probabilities, and then added all together to get the PV of utility under uncertainty.
+uncertain_pv_g <-
+    ((sum((((uncertain_2_df$consumption))^(1-n)/(1-n))/(1+r)^t))*.2 +
+    (sum((((uncertain_4_df$consumption))^(1-n)/(1-n))/(1+r)^t))*.5 +
+    (sum((((uncertain_6_df$consumption))^(1-n)/(1-n))/(1+r)^t))*.3)
+
+
+#theta function: same as in 2c except now we're comparing with the PV for the uncertainty scenario instead of the 4.4 scenario.
+theta_function_2d <- function(theta){uncertain_pv_g-sum(((((1-theta)*T_0_df$consumption0))^(1-n)/(1-n))/(1+r)^t)}
+
+#find theta where difference in PV = 0 between climate change scenarios
+theta_2d <- uniroot(theta_function_2d, interval = c(0,1), tol = .0001)
+
 ```
 
+Theta star under uncertainty: **`r round(theta_2d$root, 4)`**
